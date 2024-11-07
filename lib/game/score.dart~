@@ -1,0 +1,80 @@
+
+import 'package:flutter/material.dart';
+import 'package:flame/components.dart';
+import 'package:flame_audio/flame_audio.dart';
+import 'package:game_flutter/game/assets.dart';
+import 'package:game_flutter/game/flappy_bird_game.dart';
+import 'package:game_flutter/components/bomb.dart';
+import 'package:game_flutter/components/fruit.dart';
+import 'package:game_flutter/screens/game_over_screen.dart';  // Pastikan path ini sesuai
+
+class ScoreWidget extends StatefulWidget {
+  final flappybirdgame game;
+
+  const ScoreWidget({
+    Key? key,
+    required this.game,
+  }) : super(key: key);
+
+  @override
+  _ScoreWidgetState createState() => _ScoreWidgetState();
+}
+
+class _ScoreWidgetState extends State<ScoreWidget> {
+  int _score = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _score = widget.game.bird.score;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 20,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Text(
+          'Score: $_score',
+          style: const TextStyle(
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Game',
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Fungsi untuk memperbarui skor ketika burung memakan buah
+  void updateScore() {
+    setState(() {
+      _score += 1;
+    });
+    widget.game.bird.score += 1;
+    FlameAudio.play(assets.point);
+  }
+
+  // Fungsi untuk menangani saat game over
+  void gameOver() {
+    setState(() {
+      widget.game.overlays.add(GameOverScreen.id); // Tampilkan layar GameOver
+      widget.game.pauseEngine(); // Hentikan game saat game over
+    });
+  }
+
+  // Fungsi yang dipanggil saat terjadi tabrakan dengan komponen lain
+  void onCollision(PositionComponent other) {
+    if (other is fruit) { // Jika burung menabrak buah
+      updateScore();
+      other.removeFromParent(); // Hapus buah setelah dimakan
+    } else if (other is Bomb) { // Jika burung menabrak bom
+      gameOver();
+    }
+  }
+}
+
+
